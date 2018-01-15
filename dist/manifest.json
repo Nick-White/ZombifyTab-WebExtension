@@ -1,0 +1,31 @@
+{
+	"manifest_version": 2,
+	"name": "ZombifyTab-WebExtension",
+	"version": "0.1",
+
+	"applications": {
+		"gecko": {
+			"id": "ZombifyTab-WebExtension@email.com"
+		}
+	},
+	
+	"permissions": [
+		"<all_urls>",
+		"tabs",
+		"webNavigation",
+		"webRequest"
+	],
+
+	"browser_action": {
+		"default_title": "Zombify tab"
+	},
+	
+	"background": {
+		"scripts": ["main.js"]
+	},
+	
+	"web_accessible_resources": [
+		"zombified.html",
+		"zombified.css"
+	]
+}
