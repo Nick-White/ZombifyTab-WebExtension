@@ -1,4 +1,3 @@
-/dist/main.js
-/dist/zombified.js
+/dist/**/*.js
 /dist/web-ext-artifacts
 /node_modules
