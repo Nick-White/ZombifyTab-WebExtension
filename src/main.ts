@@ -14,10 +14,7 @@ browser.browserAction.onClicked.addListener((tab: Tab): void => {
     if (typeof tab.url === "undefined") {
         return;
     }
-    browser.tabs.create({
-        active: true,
-        index: tab.index,
+    browser.tabs.update(tab.id, {
         url: buildZombifiedUrl(tab)
-    })
-    browser.tabs.remove(<number>tab.id);
+    });
 });
