@@ -22,6 +22,13 @@ var mainConfig = Object.assign({}, commonConfig, {
     path: path.resolve(__dirname, "dist")
   }
 });
+var popupMenuConfig = Object.assign({}, commonConfig, {
+  entry: "./src/popupMenu.ts",
+  output: {
+    filename: "popupMenu.js",
+    path: path.resolve(__dirname, "dist")
+  }
+});
 var zombifiedConfig = Object.assign({}, commonConfig, {
   entry: "./src/zombified.ts",
   output: {
@@ -30,4 +37,4 @@ var zombifiedConfig = Object.assign({}, commonConfig, {
   }
 });
 
-module.exports = [mainConfig, zombifiedConfig];
+module.exports = [mainConfig, popupMenuConfig, zombifiedConfig];

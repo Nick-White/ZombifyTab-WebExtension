@@ -17,7 +17,8 @@
 	],
 
 	"browser_action": {
-		"default_title": "Zombify tab"
+		"default_title": "Zombify menu",
+		"default_popup": "popupMenu.html"
 	},
 	
 	"background": {
