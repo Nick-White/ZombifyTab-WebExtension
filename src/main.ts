@@ -9,12 +9,3 @@ function buildZombifiedUrl(tab: Tab): string {
     }
     return zombifiedUrl.toString();
 }
-
-browser.browserAction.onClicked.addListener((tab: Tab): void => {
-    if (typeof tab.url === "undefined") {
-        return;
-    }
-    browser.tabs.update(tab.id, {
-        url: buildZombifiedUrl(tab)
-    });
-});
