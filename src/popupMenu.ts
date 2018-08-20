@@ -85,11 +85,7 @@ function getCurrentTab(): Promise<Tab> {
 
 function zombify(tab: Tab): Promise<void> {
     return new Promise<void>((resolve: () => void) => {
-        if (typeof tab.url === "undefined") {
-            resolve();
-            return;
-        }
-        if (isZombified(tab)) {
+        if ((typeof tab.url === "undefined") || shouldIgnore(tab.url) || isZombified(tab)) {
             resolve();
             return;
         }
@@ -99,7 +95,18 @@ function zombify(tab: Tab): Promise<void> {
             resolve();
         });
     });
-    
+}
+
+const REG_EXPS_OF_URLS_TO_IGNORE: RegExp[] = [
+    /^about:.+$/
+];
+function shouldIgnore(url: string): boolean {
+    for (let regExpOfUrlToIgnore of REG_EXPS_OF_URLS_TO_IGNORE) {
+        if (regExpOfUrlToIgnore.test(url)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function isZombified(tab: Tab) {
