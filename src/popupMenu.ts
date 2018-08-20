@@ -1,20 +1,31 @@
 import * as $ from "jquery";
+import { zombifier } from "./zombifier";
 import Tab = browser.tabs.Tab;
+import { ConfigurationStorage } from "./ConfigurationStorage";
+import { Configuration } from "./Configuration";
 
 $(document).ready((): void => {
     $("#zombifyCurrentTabButton").on("click", () => {
-        zombifyCurrentTab().then(() => {
+        zombifier.zombifyCurrentTab().then(() => {
             closePopup();
         });
     });
     $("#zombifyAllOtherTabsButton").on("click", () => {
-        zombifyAllOtherTabs().then(() => {
+        zombifier.zombifyAllOtherTabs().then(() => {
             closePopup();
         });
     });
-});
 
-let zombifiedBaseUrlAsString: string = browser.runtime.getURL("zombified.html");
+    ConfigurationStorage.getInstance().getNotNull().then((configuration: Configuration) => {
+        $("#automaticallyZombifyNewTabs")
+                .prop("checked", configuration.automaticallyZombifyNewTabs)
+                .on("change", (event: JQuery.Event) => {
+                    let checked: boolean = $(event.target).prop("checked");
+                    browser.runtime.sendMessage({automaticallyZombifyNewTabs: checked});
+                })
+    });
+
+});
 
 function closePopup(): void {
     let popupUrl: string = window.location.href;
@@ -30,94 +41,4 @@ function closePopup(): void {
             window.close();
         }
     });
-}
-
-function zombifyCurrentTab(): Promise<void> {
-    return new Promise<void>((resolve: () => void) => {
-        getCurrentTab().then((currentTab: Tab) => {
-            zombify(currentTab).then(() => {
-                resolve();
-            });
-        });
-    });
-}
-
-function zombifyAllOtherTabs(): Promise<void> {
-    return new Promise<void>((resolve: () => void) => {
-        getCurrentTab().then((currentTab: Tab) => {
-            getAllOtherTabs(currentTab).then((allOtherTabs: Tab[]) => {
-                let zombifyOtherTabPromises: Promise<void>[] = [];
-                allOtherTabs.forEach((otherTab: Tab) => {
-                    let zombifyOtherTabPromise = zombify(otherTab);
-                    zombifyOtherTabPromises.push(zombifyOtherTabPromise);
-                });
-                Promise.all(zombifyOtherTabPromises).then(() => {
-                    resolve();
-                });
-            });
-        });
-    });
-}
-
-function getAllOtherTabs(tab: Tab): Promise<Tab[]> {
-    return new Promise<Tab[]>((resolve: (allOtherTabs: Tab[]) => void) => {
-        browser.tabs.query({
-            windowId: tab.windowId,
-        }).then((foundTabs: Tab[]) => {
-            let allOtherTabs: Tab[] = foundTabs.filter((foundTab: Tab): boolean => {
-                return ((foundTab.id !== tab.id) && (foundTab.incognito === tab.incognito));
-            });
-            resolve(allOtherTabs);
-        });
-    });
-}
-
-function getCurrentTab(): Promise<Tab> {
-    return new Promise<Tab>((resolve: (currentTab: Tab) => void) => {
-        browser.tabs.query({
-            active: true
-        }).then((tabs: Tab[]) => {
-            let currentTab: Tab = tabs[0];
-            resolve(currentTab);
-        });
-    });
-}
-
-function zombify(tab: Tab): Promise<void> {
-    return new Promise<void>((resolve: () => void) => {
-        if ((typeof tab.url === "undefined") || shouldIgnore(tab.url) || isZombified(tab)) {
-            resolve();
-            return;
-        }
-        browser.tabs.update(tab.id, {
-            url: buildZombifiedUrl(tab)
-        }).then(() => {
-            resolve();
-        });
-    });
-}
-
-const REG_EXPS_OF_URLS_TO_IGNORE: RegExp[] = [
-    /^about:.+$/
-];
-function shouldIgnore(url: string): boolean {
-    for (let regExpOfUrlToIgnore of REG_EXPS_OF_URLS_TO_IGNORE) {
-        if (regExpOfUrlToIgnore.test(url)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function isZombified(tab: Tab) {
-    return ((<string>tab.url).indexOf(zombifiedBaseUrlAsString) === 0);
-}
-
-function buildZombifiedUrl(tab: Tab): string {
-    let zombifiedUrl: URL = new URL(zombifiedBaseUrlAsString);
-    zombifiedUrl.searchParams.append("url", <string>tab.url);
-    if (typeof tab.title !== "undefined") {
-        zombifiedUrl.searchParams.append("title", tab.title);
-    }
-    return zombifiedUrl.toString();
 }

@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "ZombifyTab-WebExtension",
-	"version": "0.2",
+	"version": "0.3.0",
 
 	"applications": {
 		"gecko": {
@@ -11,6 +11,7 @@
 	
 	"permissions": [
 		"<all_urls>",
+		"storage",
 		"tabs",
 		"webNavigation",
 		"webRequest"
