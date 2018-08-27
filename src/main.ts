@@ -10,25 +10,43 @@ ConfigurationStorage.getInstance().createDefaultIfNeeded().then(() => {
     });
 });
 
-function automaticallyZombifyNewTabListener(tab: Tab) {
-    if (typeof tab.id === "undefined") {
-        return;
+function getTab(tabId: number | undefined): Promise<Tab> {
+    if (typeof tabId === "undefined") {
+        return Promise.reject(new Error(""));
     }
-    setTimeout(() => {
+    return browser.tabs.get(tabId);
+}
+
+function automaticallyZombifyNewTabListener(tab: Tab) {
+    AsyncUtils.waitUntil((): Promise<boolean> => {
+        return new Promise<boolean>((resolve: (result: boolean) => void) => {
+            getTab(tab.id).then((tab: Tab): void => {
+                resolve(
+                    (tab.url !== "about:blank") && // New tab hasn't yet loaded its URL
+                    (tab.active == false)); // Avoid zombifying a tab newly opened by the user
+            });
+        });
+    }, {
+        timeoutMillis: 5000,
+        timeBetweenTriesMillis: 200
+    }).then((): void => {
         let zombifyTab = (): void => {
-            browser.tabs.get(<number> tab.id).then((tab: Tab): void => {
+            getTab(tab.id).then((tab: Tab): void => {
                 zombifier.zombify(tab);
             });
         };
         AsyncUtils.waitUntil((): Promise<boolean> => {
             return new Promise<boolean>((resolve: (result: boolean) => void) => {
-                browser.tabs.get(<number> tab.id).then((tab: Tab): void => {
+                getTab(tab.id).then((tab: Tab): void => {
                     let urlPart: string = (<string> tab.url).replace(/^https?\:\/\/(www\.)?/, '');
                     resolve(tab.title !== urlPart);
                 });
             });
-        }, 5000).then(zombifyTab).catch(zombifyTab);
-    }, 1000);
+        }, {
+            timeoutMillis: 2000,
+            timeBetweenTriesMillis: 200
+        }).then(zombifyTab).catch(zombifyTab);
+    });
 }
 
 function toggleAutomaticallyZombifyNewTabListener(configuration: Configuration) {

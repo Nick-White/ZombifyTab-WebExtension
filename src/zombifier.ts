@@ -3,7 +3,8 @@ import Tab = browser.tabs.Tab;
 class Zombifier {
     
     private REG_EXPS_OF_URLS_TO_IGNORE: RegExp[] = [
-        /^about:.+$/
+        /^about:.+$/,
+        /^moz-extension:.+$/
     ];
 
     private zombifiedBaseUrlAsString: string = browser.runtime.getURL("zombified.html");
